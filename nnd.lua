@@ -48,7 +48,6 @@ function script_update(settings)
 	source_name = obs.obs_data_get_string(settings, "source")
 	total_ms = obs.obs_data_get_int(settings, "duration")
 	spam_size = obs.obs_data_get_int(settings, "size")
-	x_speed = screen_size.x/(total_ms/2)*(1000/fps)
 end
 
 -- A function named script_load will be called on startup
@@ -144,6 +143,11 @@ function play_event()
 	text_scene = obs.obs_scene_from_source(curr_scene_s) -- takes no references
 	local text_sceneitem = obs.obs_scene_find_source(text_scene, source_name) -- takes no references
 	local text_source = obs.obs_get_source_by_name(source_name)
+
+	local scale = obs.vec2()
+	obs.obs_sceneitem_get_scale(text_sceneitem, scale) -- same size as source text
+	local text_width = obs.obs_source_get_width(text_source) * scale.x -- width in pixel in current scene
+	x_speed = (screen_size.x+text_width)/(total_ms/2)*(1000/fps) -- scale for long text to get it fully off screen
 
 	obs.obs_enter_graphics();
 	for i=1,spam_size do
