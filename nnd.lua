@@ -8,16 +8,15 @@ end
 
 -- Properties
 source_name   = nil
-total_ms = 1000
-screen_size = new_vec2(2560, 1440)
-spam_size = 70
+total_ms = 2500
+spam_size = 30
 
 -- Internal state
 playing = false
 spam_items = {}
 text_scene = nil
-fps = 60
-x_speed = screen_size.x/(total_ms/2)*(1000/fps)
+fps = 30
+screen_size = new_vec2(1920, 1080)
 hotkey_id     = obs.OBS_INVALID_HOTKEY_ID
 
 
@@ -48,6 +47,12 @@ function script_update(settings)
 	source_name = obs.obs_data_get_string(settings, "source")
 	total_ms = obs.obs_data_get_int(settings, "duration")
 	spam_size = obs.obs_data_get_int(settings, "size")
+end
+
+-- Sets defaults for settings (obs_data_t)
+function script_defaults(settings)
+	obs.obs_data_set_default_int(settings, "duration", total_ms)
+	obs.obs_data_set_default_int(settings, "size", spam_size)
 end
 
 -- A function named script_load will be called on startup
@@ -121,7 +126,9 @@ function create_spam_item(scene, text_source, text_sceneitem)
 end
 
 -- Hotkey callback
-function play_event()
+function play_event(pressed)
+	if not pressed then return end
+
 	if playing then
 		return
 	else
@@ -147,8 +154,12 @@ function play_event()
 	local scale = obs.vec2()
 	obs.obs_sceneitem_get_scale(text_sceneitem, scale) -- same size as source text
 	local text_width = obs.obs_source_get_width(text_source) * scale.x -- width in pixel in current scene
+	ovi = obs.obs_video_info()
+	obs.obs_get_video_info(ovi)
+	fps = ovi.fps_num/ovi.fps_den
+	screen_size = new_vec2(ovi.base_width, ovi.base_height)
 	x_speed = (screen_size.x+text_width)/(total_ms/2)*(1000/fps) -- scale for long text to get it fully off screen
-
+	
 	obs.obs_enter_graphics();
 	for i=1,spam_size do
 		spam_items[i] =	{
